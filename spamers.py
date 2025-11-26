@@ -361,7 +361,8 @@ print(f"{'='*70}\n")
 try:
     # Find all JSONL files in the current directory
     jsonl_files = glob.glob('*.jsonl')
-    jsonl_files.sort()  # Process in alphabetical order (oldest first)
+    # Sort by modification time: oldest first, newest last
+    jsonl_files.sort(key=os.path.getmtime)
 
     if not jsonl_files:
         print("No JSONL files found in the current directory")
