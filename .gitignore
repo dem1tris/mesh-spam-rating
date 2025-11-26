@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Virtualenv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Logs
+*.log
+
+# Raw captures
+*.jsonl
+ignored_nodes.txt
+@ignored_nodes.txt
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Generated images / reports
+*.png
+
+# But keep sample assets under samples/
+!/samples/
+!/samples/*.png
+!/samples/*.jsonl
+!/samples/*.log
+
+
