@@ -197,7 +197,7 @@ def process_jsonl_file(jsonl_file, recreate=False):
     
     print(f"{'TOTAL':<50} {position_total:>10} {device_total:>10} {environment_total:>12} {grand_total:>10} / {total_lines}{time_period_str}")
     
-    # Create combined visual histogram with stacked bars
+    # Create combined visual histogram with stacked bars (sorted by total)
     nodes = sorted_nodes
     n_nodes = len(nodes)
     pos_values = [position_counts[node] for node in nodes]
@@ -211,9 +211,9 @@ def process_jsonl_file(jsonl_file, recreate=False):
     y_pos = np.arange(n_nodes)
     
     # Create stacked bars - Position at bottom, Device in middle, Environment on top
-    bars1 = ax.barh(y_pos, pos_values, label='Position', color='#2E86AB', alpha=0.8)
-    bars2 = ax.barh(y_pos, dev_values, left=pos_values, label='Device', color='#A23B72', alpha=0.8)
-    bars3 = ax.barh(y_pos, env_values, left=np.array(pos_values) + np.array(dev_values), label='Environment', color='#F18F01', alpha=0.8)
+    ax.barh(y_pos, pos_values, label='Position', color='#2E86AB', alpha=0.8)
+    ax.barh(y_pos, dev_values, left=pos_values, label='Device', color='#A23B72', alpha=0.8)
+    ax.barh(y_pos, env_values, left=np.array(pos_values) + np.array(dev_values), label='Environment', color='#F18F01', alpha=0.8)
     
     # Add value labels on stacked bars
     for i, (pos, dev, env) in enumerate(zip(pos_values, dev_values, env_values)):
@@ -273,8 +273,59 @@ def process_jsonl_file(jsonl_file, recreate=False):
     fig.subplots_adjust(top=0.96, right=0.85)
     plt.savefig(combined_histogram, dpi=150, bbox_inches='tight')
     plt.close()
+
+    # Also create a version with nodes sorted alphabetically (by label)
+    alpha_histogram = f"{base_name}_alphabetical.png"
+    nodes_alpha = sorted(all_nodes)
+    n_nodes_alpha = len(nodes_alpha)
+    pos_values_alpha = [position_counts[node] for node in nodes_alpha]
+    dev_values_alpha = [device_counts[node] for node in nodes_alpha]
+    env_values_alpha = [environment_counts[node] for node in nodes_alpha]
+
+    fig_alpha, ax_alpha = plt.subplots(figsize=(14, max(6, n_nodes_alpha * 0.3)))
+    y_pos_alpha = np.arange(n_nodes_alpha)
+
+    ax_alpha.barh(y_pos_alpha, pos_values_alpha, label='Position', color='#2E86AB', alpha=0.8)
+    ax_alpha.barh(y_pos_alpha, dev_values_alpha, left=pos_values_alpha, label='Device', color='#A23B72', alpha=0.8)
+    ax_alpha.barh(y_pos_alpha, env_values_alpha,
+                  left=np.array(pos_values_alpha) + np.array(dev_values_alpha),
+                  label='Environment', color='#F18F01', alpha=0.8)
+
+    for i, (pos, dev, env) in enumerate(zip(pos_values_alpha, dev_values_alpha, env_values_alpha)):
+        total = pos + dev + env
+        if total > 0:
+            if pos > 0:
+                ax_alpha.text(pos / 2, i, f'{pos}', va='center', ha='center',
+                              fontsize=8, color='white', weight='bold')
+            if dev > 0:
+                ax_alpha.text(pos + dev / 2, i, f'{dev}', va='center', ha='center',
+                              fontsize=8, color='white', weight='bold')
+            if env > 0:
+                ax_alpha.text(pos + dev + env / 2, i, f'{env}', va='center', ha='center',
+                              fontsize=8, color='white', weight='bold')
+            ax_alpha.text(total, i, f' {total}', va='center', ha='left',
+                          fontsize=9, weight='bold')
+
+    ax_alpha.set_yticks(y_pos_alpha)
+    ax_alpha.set_yticklabels(nodes_alpha)
+    ax_alpha.set_xlabel('Count')
+    ax_alpha.set_ylabel('Node')
+    ax_alpha.set_title(f"Position, Device, and Environment Telemetry (alphabetical) - {base_name}\n({title_info})")
+    ax_alpha.legend(loc='upper left', bbox_to_anchor=(1.01, 1), frameon=True)
+    ax_alpha.set_ylim(n_nodes_alpha - 0.5, -0.5)
+
+    max_total_alpha = max([p + d + e for p, d, e in zip(pos_values_alpha,
+                                                        dev_values_alpha,
+                                                        env_values_alpha)], default=1)
+    ax_alpha.set_xlim(0, max_total_alpha * 1.15 if max_total_alpha > 0 else 1)
+
+    plt.tight_layout(pad=2.0, h_pad=1.0, w_pad=1.0)
+    fig_alpha.subplots_adjust(top=0.96, right=0.85)
+    plt.savefig(alpha_histogram, dpi=150, bbox_inches='tight')
+    plt.close(fig_alpha)
     
     print(f"\nCombined histogram saved to: {combined_histogram}")
+    print(f"Alphabetical histogram saved to: {alpha_histogram}")
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description='Generate histograms from packet monitor JSONL files')
